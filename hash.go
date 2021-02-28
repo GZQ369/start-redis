@@ -1,11 +1,12 @@
 package redis
 
 import (
-	"fmt"
+	"errors"
 	"unsafe"
 )
 
 type dict struct {
+	key      map[string][]dictEntry
 	dType    dictType
 	privdata *unsafe.Pointer
 	dicter   [2]dictht
@@ -18,8 +19,8 @@ type dictht struct {
 	used     int64
 }
 type dictEntry struct {
-	key   string
-	value []*unsafe.Pointer
+	field string
+	value Sdshdr
 	next  *dictEntry //将多个hash值相同的键值对连接在一起，解决hash冲突问题
 }
 type dictType struct {
@@ -29,23 +30,47 @@ type dictType struct {
 func dictCreate() dict {
 	return dict{}
 }
-func (d dict)dictAdd(key string, v ...interface{}) dict {
-	d.dicter[0].table[0].key = key
-	for _, arg := range v { //迭代不定参数
-		ag:=arg
-		switch arg.(type) {
-		case int:
-			res:= append(d .dicter[0].table[0].value, unsafe.Pointer(&ag))
-		case string:
-			fmt.Println(arg, "is string")
-		case float64:
-			fmt.Println(arg, "is float64")
-		case bool:
-			fmt.Println(arg, " is bool")
-		case int64:
-			fmt.Println(arg, " is bool")
-		default:
-			fmt.Println("未知的类型")
-		}
+func (d dict) dictAdd(key string, v ...string) (dict, error) {
+	if len(v)%2 != 0 {
+		return dict{}, errors.New("ERR wrong number of arguments for HMSET")
+	}
+	d.dicter[0].size = int64(len(v) / 2)
+	var tb []dictEntry
+	for i := 0; i < len(v)-1; i++ {
+		tb = append(tb, dictEntry{v[i], Sdshdr{Buf: []byte(v[i+1])}, nil})
+	}
+	d.dicter[0].table = tb
+	d.key = map[string][]dictEntry{key:tb}
+	return d, nil
+}
+
+//将给定的值加入到字典中，如果键值已经存在于字典，那么新值取代原有的值
+func (d dict) dictReplace(key string, v ...string) (dict, error) {
+
+	if len(v)%2 != 0 {
+		return dict{}, errors.New("ERR wrong number of arguments for HMSET")
+	}
+	d.dicter[0].size = int64(len(v) / 2)
+	var tb []dictEntry
+	for i := 0; i < len(v)-1; i++ {
+		tb = append(tb, dictEntry{v[i], Sdshdr{Buf: []byte(v[i+1])}, nil})
+	}
+	d.dicter[0].table = tb
+	if _, ok :=d.key[key];ok {
+		d.key = map[string][]dictEntry{key:tb}
+	}
+	return d, nil
+}
+
+//返回给定键的值
+func (d dict)dictFetchValue(key string) ([]dictEntry, error) {
+	if v, ok :=d.key[key];ok {
+		return v,nil
+	}else {
+		return []dictEntry{},errors.New("keys not exits")
 	}
 }
+//从字典随机返回一个键值对
+
+//从字典中删除给定键所对应的键值对
+//释放给定字典，以及字典包含的所有的键值对O（n）

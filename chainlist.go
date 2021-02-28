@@ -1,13 +1,15 @@
 package redis
 
 import (
+	"bytes"
+	"errors"
 	"unsafe"
 )
 
 type ListNode struct {
 	prev  *ListNode
 	Next  *ListNode
-	Value *interface{}
+	Value Sdshdr
 }
 type ChainList struct {
 	head  *ListNode
@@ -27,7 +29,6 @@ func ifyType(x interface{}) unsafe.Pointer {
 		return unsafe.Pointer(&v)
 	default:
 		return unsafe.Pointer(&v)
-
 	}
 }
 //初始化
@@ -37,13 +38,19 @@ func listCreate() ChainList {
 
 //将一个包含给定值的新节点添加到给定链表的表头
 func (c *ChainList)listAddNodeHead(node ListNode) *ChainList{
+	res := c.head
 	c.head = &node
+	node.prev = nil
+	node.Next = res
 	return c
 }
 
 //将一个包含给点值的新节点添加到给定链表的表尾
 func (c *ChainList)listAddNodeTail(node ListNode) *ChainList{
+	res := c.tail
 	c.tail = &node
+	node.prev = res
+	node.Next = nil
 	return c
 }
 //将一个包含给定值的新节点添加到给定节点的之前或之后
@@ -52,13 +59,17 @@ func (c *ChainList)listInsertNode(node ListNode) *ChainList{
 	return c
 }
 //查找并返回链表中包含给定值的节点
-func (c *ChainList)listSearchKey(v *interface{}) ListNode {
+func (c *ChainList)listSearchKey(v string) (*ListNode, error) {
 	var res *ListNode
 	res = c.head
 
 	for res != nil{
+		if bytes.Equal(res.Value.Buf,[]byte(v)){
+			return res,nil
+		}
 		res = res.Next
 	}
+	return nil, errors.New("key node not exits")
 }
 //返回链表在给定索引上的节点
 //从链表中删除给定节点
