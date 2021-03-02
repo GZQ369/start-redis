@@ -15,26 +15,26 @@ type IntSet struct {
 func IntSetNew() IntSet {
 	return IntSet{}
 }
-func (i IntSet) intSetAdd(k string) IntSet {
+func (i *IntSet) intSetAdd(k string) IntSet {
 	i.contents = append(i.contents, k)
 	sort.Strings(i.contents)
 	i.contents = Duplicate(i.contents)
 	i.length++
-	return i
+	return *i
 }
-func (i IntSet) intSetRemove(k string) (IntSet, error) {
+func (i *IntSet) intSetRemove(k string) (IntSet, error) {
 	for item := int64(0); item < i.length; item++ {
 		if i.contents[item] == k {
 			i.contents = append(i.contents[:item], i.contents[item+1:]...)
 			i.length--
-			return i, nil
+			return *i, nil
 		}
 
 	}
-	return i, errors.New("key not exits")
+	return *i, errors.New("key not exits")
 }
-
-func (i IntSet) intSetFind(k string) bool {
+//查找是否存在对应的键
+func (i *IntSet) intSetFind(k string) bool {
 	var res  []string =i.contents
 	low,high := 0,len(res)-1
 
@@ -51,7 +51,7 @@ func (i IntSet) intSetFind(k string) bool {
 	return false
 }
 //取出给定索引上的元素
-func (i IntSet)intSetGet(k int64) string {
+func (i *IntSet)intSetGet(k int64) string {
 	return i.contents[k]
 }
 //f返回整数集合包含的元素的个数
