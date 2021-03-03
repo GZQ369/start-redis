@@ -11,3 +11,5 @@ type entryNode struct { //压缩列表节点
 	content                 []byte
 	previousEntryLength uintptr //上个节点的长度
 }
+
+
