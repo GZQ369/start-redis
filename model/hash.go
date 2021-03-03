@@ -4,16 +4,15 @@ import (
 	"errors"
 	"math/rand"
 	"time"
-	"unsafe"
 )
 
-type Dict struct {
-	//key     KvObject map[string]redisObject
-	dType    dictType
-	privdata *unsafe.Pointer
-	dicter   [2]dictht
-	rehash   int64
-}
+//type Dict struct {
+//	//key     KvObject map[string]redisObject
+//	dType    dictType
+//	privdata *unsafe.Pointer
+//	dicter   [2]dictht
+//	rehash   int64
+//}
 type dictht struct {
 	table    []dictEntry
 	size     int64
@@ -21,48 +20,47 @@ type dictht struct {
 	used     int64
 }
 type dictEntry struct {
-	field string
-	value Sdshdr
+	field  map[string]Sdshdr
 	next  *dictEntry //将多个hash值相同的键值对连接在一起，解决hash冲突问题
 }
 type dictType struct {
 	//计算hash值的函数
 }
 
-func dictCreate() Dict {
-	return Dict{}
-}
-func (d *Dict) dictAdd( v ...string) (Dict, error) {
+//func dictCreate() Dict {
+//	return Dict{}
+//}
+func (d *dictht) dictAdd( v ...string) (dictht, error) {
 	if len(v)%2 != 0 {
-		return Dict{}, errors.New("ERR wrong number of arguments for HMSET")
+		return dictht{}, errors.New("ERR wrong number of arguments for HMSET")
 	}
-	d.dicter[0].size = int64(len(v) / 2)
+	d.size = int64(len(v) / 2)
 	var tb []dictEntry
 	for i := 0; i < len(v)-1; i++ {
-		tb = append(tb, dictEntry{v[i], Sdshdr{Buf: []byte(v[i+1])}, nil})
+		tb = append(tb, dictEntry{field: map[string]Sdshdr{v[i]:Sdshdr{Buf: []byte(v[i+1])}}})
 	}
-	d.dicter[0].table = tb
+	d.table = tb
 	return *d, nil
 }
 
 //将给定的值加入到字典中，如果键值已经存在于字典，那么新值取代原有的值
-func (d *Dict) dictReplace( v ...string) (Dict, error) {
+func (d *dictht) dictReplace( v ...string) (dictht, error) {
 
 	if len(v)%2 != 0 {
-		return Dict{}, errors.New("ERR wrong number of arguments for HMSET")
+		return dictht{}, errors.New("ERR wrong number of arguments for HMSET")
 	}
-	d.dicter[0].size = int64(len(v) / 2)
+	d.size = int64(len(v) / 2)
 	var tb []dictEntry
 	for i := 0; i < len(v)-1; i++ {
-		tb = append(tb, dictEntry{v[i], Sdshdr{Buf: []byte(v[i+1])}, nil})
+		tb = append(tb, dictEntry{field: map[string]Sdshdr{v[i]:Sdshdr{Buf: []byte(v[i+1])}}})
 	}
-	d.dicter[0].table = tb
+	d.table = tb
 
 	return *d, nil
 }
 
 //返回给定键的值
-func (d Dict) dictFetchValue(key string) ([]dictEntry, error) {
+func (d dictht) dictFetchValue(key string) ([]dictEntry, error) {
 	if v, ok := d.key[key]; ok {
 		return v, nil
 	} else {
