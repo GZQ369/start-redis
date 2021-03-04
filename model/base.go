@@ -21,6 +21,7 @@ func SdsEmpty(key string) Sdshdr {
 	return Sdshdr{}
 }
 func (s *Sdshdr)SdsLen() int {
+	s.Len = len(s.Buf)
 	return s.Len
 }
 //创建一个给定SDS的副本
