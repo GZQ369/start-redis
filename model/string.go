@@ -64,7 +64,7 @@ func (r *RedisDb) Append(key, v string) (out int, err error) {
 		out = newSds.SdsLen()
 	} else {
 		var i *Sdshdr = (*Sdshdr)(r.dict[key].ptr)
-		i.Buf = append(i.Buf, []byte(v)...)
+		i.SdsCatsDs(Sdshdr{Buf: []byte(v)})
 		out = i.SdsLen()
 	}
 	return out, nil
@@ -78,6 +78,7 @@ func (r *RedisDb) Incrby(k string, v int64) (out string, err error) {
 		return out, nil
 	}
 	if res.Enconding == sdsHdr {
+		res.lru = time.Now().Unix()
 		return "", errors.New("ERR value is not an integer or out of range")
 	}
 	var i *SdsInt = (*SdsInt)(res.ptr)
@@ -115,14 +116,54 @@ func (r *RedisDb) StrLen(k string) (l int, err error) {
 		return len(s), nil
 	}
 	var i *Sdshdr = (*Sdshdr)(res.ptr)
+	res.lru = time.Now().Unix()
 	l = i.SdsLen()
 	return l, nil
 }
 
 //将字符串特定索引上的值设置为给定的字符
-//func (r *RedisDb) SetRange(k string, index int) (s string, err error) {
-//
-//}
+func (r *RedisDb) SetRange(k,v string, index int,) (s string, err error) {
+	res, ok := r.dict[k]
+	if !ok {
+		err = errors.New("the key not exits")
+		return "", err
+	}
+	if res.Enconding==sdsInt{
+		var i *SdsInt = (*SdsInt)(res.ptr)
+		s = strconv.FormatFloat(i.buf, 'f', -1, 64)
+		if index <len([]byte(s)){
+			var byteTemp []byte
+			temp := []byte(s)[index+1:]
+			byteTemp = append(byteTemp,[]byte(s)[:index]...)
+			byteTemp= append(byteTemp, []byte(v)...)
+			byteTemp = append(byteTemp, temp...)
+			s = string(byteTemp)
+			re:=Sdshdr{Buf: byteTemp}
+			re.Len = re.SdsLen()
+			res.ptr = unsafe.Pointer(&re)
+			res.Enconding = sdsHdr
+			res.lru = time.Now().Unix()
+			res.Refound++
+			//r.dict[k] = res
+		}else {
+			err = errors.New("index integer or out of range")
+			return
+		}
+		return s,nil
+	}
+	var i *Sdshdr = (*Sdshdr)(res.ptr)
+	if index <i.SdsLen(){
+		temp := i.Buf[index+1:]
+		i.Buf = append([]byte{},i.Buf[:index]...)
+		i.Buf = append(i.Buf, []byte(v)...)
+		i.Buf = append(i.Buf, temp...)
+		s = string(i.Buf)
+	}else {
+		err = errors.New("index integer or out of range")
+		return
+	}
+	return
+}
 
 //拷贝对象所保存的整数值后转换成字符串值，然后取出指定索引的字符
 func  (r *RedisDb) GetRange(k string, index int) (s string, err error) {
@@ -133,9 +174,10 @@ func  (r *RedisDb) GetRange(k string, index int) (s string, err error) {
 	}
 	if res.Enconding == sdsInt {
 		var i *SdsInt = (*SdsInt)(res.ptr)
-		s = strconv.Itoa(int(i.buf))
+		s = strconv.FormatFloat(i.buf, 'f', -1, 64)
+		res.lru = time.Now().Unix()
 		fmt.Println(s)
-		if index > len(s)-1 {
+		if index <= len(s)-1 {
 			s = string(s[index])
 		}else {
 			err = errors.New("index integer or out of range")
@@ -143,7 +185,8 @@ func  (r *RedisDb) GetRange(k string, index int) (s string, err error) {
 		return s,err
 	}
 	var i *Sdshdr = (*Sdshdr)(res.ptr)
-	if index > i.SdsLen() -1 {
+	res.lru = time.Now().Unix()
+	if index <= i.SdsLen() -1 {
 		s  = string(i.Buf[index])
 	}else {
 		err = errors.New("index integer or out of range")
