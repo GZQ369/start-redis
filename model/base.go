@@ -12,8 +12,9 @@ type Sdshdr struct {
 	Buf  []byte
 }
 
-func sdsNew(key string) Sdshdr {
-	return Sdshdr{}
+func sdsHdrNew(v string) *Sdshdr {
+	res:=[]byte(v)
+	return &Sdshdr{Len: len(res),Buf: res}
 }
 //返回一个空的SDS
 func SdsEmpty(key string) Sdshdr {

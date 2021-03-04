@@ -1,9 +1,16 @@
 package model
 
 import (
+	"strconv"
 	"time"
 	"unsafe"
 )
+
+const (
+	sdsHdr = "sdsHdr"
+	sdsInt = "sdsInt"
+)
+
 
 type redisObject struct {
 	Type      interface{}
@@ -23,14 +30,19 @@ type RedisDb struct {
 	expires map[string]int64 //过期时间
 }
 
-func kvObjectNew(key string) RedisDb {
-	return RedisDb{dict: map[string]redisObject{key: nil}}
+func RedisNew() RedisDb {
+	return RedisDb{dict: make(map[string]redisObject)}
 }
-func stringObjectNew() redisObject {
-	return redisObject{Type: String{}, Enconding: SdsString{}, lru: time.Now().Unix(), Refound: 0, ptr: unsafe.Pointer(new(SdsString))}
+func stringObjectNew(v string) (redisObject,error) {
+	va, err := strconv.ParseFloat(v, 64)
+	if err !=nil{
+		return redisObject{Type: String{}, Enconding: sdsHdr, lru: time.Now().Unix(), Refound: 1, ptr: unsafe.Pointer(sdsHdrNew(v))},nil
+	}
+	return redisObject{Type: String{}, Enconding: sdsInt, lru: time.Now().Unix(), Refound: 1, ptr: unsafe.Pointer(SdsIntNew(va))},nil
+
 }
 func hashObjectNew() redisObject {
-	return redisObject{Type: Hash{}, Enconding: dict{}, lru: time.Now().Unix(), Refound: 0, ptr: unsafe.Pointer(new(dict))}
+	return redisObject{Type: Hash{}, Enconding: dictht{}, lru: time.Now().Unix(), Refound: 0, ptr: unsafe.Pointer(new(dictht))}
 }
 func listObjectNew() redisObject {
 	return redisObject{Type: List{}, Enconding: ChainList{}, lru: time.Now().Unix(), Refound: 0, ptr: unsafe.Pointer(new(ChainList))}
@@ -39,13 +51,13 @@ func zsetObjectNew() redisObject {
 	return redisObject{Type: Zset{}, Enconding: ZSkipList{}, lru: time.Now().Unix(), Refound: 0, ptr: unsafe.Pointer(new(ZSkipList))}
 }
 func setObjectNew() redisObject {
-	return redisObject{Type: Set{}, Enconding: dict{}, lru: time.Now().Unix(), Refound: 0, ptr: unsafe.Pointer(new(dict))}
+	return redisObject{Type: Set{}, Enconding: dictht{}, lru: time.Now().Unix(), Refound: 0, ptr: unsafe.Pointer(new(dictht))}
 }
 
 //返回现在所有对象中，各个对象的数量
-func (k RedisDb) GetObjectNum() map[interface{}]int64 {
+func (r RedisDb) GetObjectNum() map[interface{}]int64 {
 	res := map[interface{}]int64{}
-	for _, ob := range k.dict {
+	for _, ob := range r.dict {
 		res[ob.Type] ++
 	}
 	return res

@@ -2,8 +2,6 @@ package model
 
 import (
 	"errors"
-	"math/rand"
-	"time"
 )
 
 //type Dict struct {
@@ -58,39 +56,39 @@ func (d *dictht) dictReplace( v ...string) (dictht, error) {
 
 	return *d, nil
 }
-
-//返回给定键的值
-func (d dictht) dictFetchValue(key string) ([]dictEntry, error) {
-	if v, ok := d.key[key]; ok {
-		return v, nil
-	} else {
-		return []dictEntry{}, errors.New("keys not exits")
-	}
-}
-
-//从字典随机返回一个键值对
-func (d Dict) dictGetRandomKey() (res map[string][]dictEntry, err error) {
-	rand.Seed(time.Now().UnixNano())
-	n := rand.Intn(len(d.key))
-	var i int
-	for k, v := range d.key {
-		if i == n {
-			res = map[string][]dictEntry{k: v}
-		}
-		i++
-	}
-	return res, nil
-}
-
-//从字典中删除给定键所对应的键值对
-func (d Dict) dictDelete(key string) {
-	delete(d.key, key)
-
-}
-
-//释放给定字典，以及字典包含的所有的键值对O（n）
-func (d Dict) dictRelease() {
-	d.key = map[string][]dictEntry{}
-	d.dicter[0].size = 0
-	d.dicter[0].table = []dictEntry{}
-}
+//
+////返回给定键的值
+//func (d dictht) dictFetchValue(key string) ([]dictEntry, error) {
+//	if v, ok := d.key[key]; ok {
+//		return v, nil
+//	} else {
+//		return []dictEntry{}, errors.New("keys not exits")
+//	}
+//}
+//
+////从字典随机返回一个键值对
+//func (d Dict) dictGetRandomKey() (res map[string][]dictEntry, err error) {
+//	rand.Seed(time.Now().UnixNano())
+//	n := rand.Intn(len(d.key))
+//	var i int
+//	for k, v := range d.key {
+//		if i == n {
+//			res = map[string][]dictEntry{k: v}
+//		}
+//		i++
+//	}
+//	return res, nil
+//}
+//
+////从字典中删除给定键所对应的键值对
+//func (d Dict) dictDelete(key string) {
+//	delete(d.key, key)
+//
+//}
+//
+////释放给定字典，以及字典包含的所有的键值对O（n）
+//func (d Dict) dictRelease() {
+//	d.key = map[string][]dictEntry{}
+//	d.dicter[0].size = 0
+//	d.dicter[0].table = []dictEntry{}
+//}
