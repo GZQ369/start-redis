@@ -44,8 +44,8 @@ func stringObjectNew(v string) (redisObject,error) {
 func hashObjectNew() redisObject {
 	return redisObject{Type: Hash{}, Enconding: dictht{}, lru: time.Now().Unix(), Refound: 0, ptr: unsafe.Pointer(new(dictht))}
 }
-func listObjectNew() redisObject {
-	return redisObject{Type: List{}, Enconding: ChainList{}, lru: time.Now().Unix(), Refound: 0, ptr: unsafe.Pointer(new(ChainList))}
+func listObjectNew() (redisObject,error) {
+	return redisObject{Type: List{}, Enconding: ChainList{}, lru: time.Now().Unix(), Refound: 0, ptr: unsafe.Pointer(new(ChainList))},nil
 }
 func zsetObjectNew() redisObject {
 	return redisObject{Type: Zset{}, Enconding: ZSkipList{}, lru: time.Now().Unix(), Refound: 0, ptr: unsafe.Pointer(new(ZSkipList))}

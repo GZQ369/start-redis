@@ -8,11 +8,11 @@ import (
 	"unsafe"
 )
 
-//使用整数值实现的字符串对象 :8个字节的长度，整形
 type SdsString struct {
 	buf string
 	len int64
 }
+//使用整数值实现的字符串对象 :8个字节的长度，整形
 type SdsInt struct {
 	buf float64
 }

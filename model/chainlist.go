@@ -12,12 +12,12 @@ type ListNode struct {
 	Value Sdshdr
 }
 type ChainList struct {
-	head  *ListNode
-	tail  *ListNode
+	head  ListNode
+	tail  ListNode
 	len   int
-	dup   *unsafe.Pointer //复制节点所报存的值
-	free  *unsafe.Pointer //释放节点所报存的值
-	match *unsafe.Pointer //比对链表节点的值和另一个输入值是否相等
+	dup   unsafe.Pointer //复制节点所报存的值
+	free  unsafe.Pointer //释放节点所报存的值
+	match unsafe.Pointer //比对链表节点的值和另一个输入值是否相等
 }
 func ifyType(x interface{}) unsafe.Pointer {
 	switch v := x.(type) {
@@ -32,24 +32,38 @@ func ifyType(x interface{}) unsafe.Pointer {
 	}
 }
 //初始化
-func listCreate() ChainList {
+func ChainlistCreate(v ...string) *ChainList {
+	res:= ChainList{}
+	var node []ListNode
+	for i,va :=range v{
+		node = ListNode{Value: *sdsHdrNew(va)}
+		if i==0{
+			node.prev = nil
+			res.head = node
+		}else if i== len(v)-1{
+			node.Next = nil
+			res.tail = node
+		}else{
+
+		}
+	}
 	return ChainList{}
 }
 
 //将一个包含给定值的新节点添加到给定链表的表头
 func (c *ChainList)listAddNodeHead(node ListNode) *ChainList{
 	res := c.head
-	c.head = &node
+	c.head = node
 	node.prev = nil
-	node.Next = res
+	node.Next = &res
 	return c
 }
 
 //将一个包含给点值的新节点添加到给定链表的表尾
 func (c *ChainList)listAddNodeTail(node ListNode) *ChainList{
 	res := c.tail
-	c.tail = &node
-	node.prev = res
+	c.tail = node
+	node.prev = &res
 	node.Next = nil
 	return c
 }
@@ -61,7 +75,7 @@ func (c *ChainList)listInsertNode(node ListNode) *ChainList{
 //查找并返回链表中包含给定值的节点
 func (c *ChainList)listSearchKey(v string) (*ListNode, error) {
 	var res *ListNode
-	res = c.head
+	res = &c.head
 
 	for res != nil{
 		if bytes.Equal(res.Value.Buf,[]byte(v)){

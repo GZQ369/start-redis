@@ -1,5 +1,7 @@
 package model
 
+import "strconv"
+
 //压缩列表
 //
 ////双端链表
@@ -14,4 +16,8 @@ package model
 //	tail *chainNode
 //	value redisObject
 //}
+
+func (r *RedisDb)Lpush(k string, v ...string) (le int, err error) {
+	r.dict[k]
+}
 
