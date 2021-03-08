@@ -3,7 +3,6 @@ package model
 import (
 	"bytes"
 	"errors"
-	"fmt"
 	"unsafe"
 )
 
@@ -117,28 +116,48 @@ func (c *ChainList) listSearchKey(v string) (*ListNode, error) {
 //}
 
 //从链表中删除给定节点
-func (c *ChainList) listDelNode(v ListNode) Sdshdr {
-	head := c.head
-	if string(head.Value.Buf) == string(v.Value.Buf){
-		c.head = head.Next
-	}else {
-		for head != nil {
-			fmt.Println(6666)
-			if string(head.Value.Buf) == string(v.Value.Buf) {
-				head.prev.Next = head.Next
-				if head.Next != nil{
-					head.Next.prev = head.prev
-				}
-				break
-			} else {
-				fmt.Println(6669)
-
-				head = head.Next
+func (c *ChainList) listDelNode(v ListNode) (Sdshdr,error) {
+	//head := c.head
+	//if string(head.Value.Buf) == string(v.Value.Buf){
+	//	c.head = head.Next
+	//}else {
+	//	for head != nil {
+	//		if string(head.Value.Buf) == string(v.Value.Buf) {
+	//			head.prev.Next = head.Next
+	//			if head.Next != nil{
+	//				head.Next.prev = head.prev
+	//			}
+	//			break
+	//		} else {
+	//			head = head.Next
+	//		}
+	//	}
+	//}
+	res:= c.head
+	for res != nil{
+		if bytes.Equal(res.Value.Buf, v.Value.Buf){
+			res.prev.Next = res.Next
+			if res.Next !=nil{
+				res.Next.prev = res.prev
 			}
+
+			return v.Value,nil
 		}
+		res = res.Next
 	}
-	return v.Value
+	return Sdshdr{},errors.New("list out of element")
 }
+//输出节点的值
+func (c *ChainList)listLRange(k string, start,stop int) ([]string,error) {
+	res:= c.head
+	var ls []string
+	for res !=nil{
+		ls= append(ls, string(res.Value.Buf))
+		res = res.Next
+	}
+	return ls,nil
+}
+
 func (c *ChainList) listFirst() ListNode {
 	return *c.head
 }

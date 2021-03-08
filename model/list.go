@@ -90,16 +90,26 @@ func (r *RedisDb) Rpop(k string) (resp string, err error) {
 		return "", errors.New("key nil")
 	} else {
 
-		n := (*redisObject)(res.ptr)
-		t:=*(*ChainList)(n.ptr)
-		s := t.listDelNode(*t.tail)
+		n := *(*redisObject)(res.ptr)
 
-		fmt.Println(string(t.head.Value.Buf))
+		t:=(*ChainList)(n.ptr)
+		s,_ := t.listDelNode(t.listLast())
+
 		res.lru = time.Now().Unix()
 		return string(s.Buf), nil
 	}
 }
-
+func (r *RedisDb)Lrange(k string) ([]string,error) {
+	res, ok := r.dict[k]
+	if !ok {
+		return []string{}, errors.New("key nil")
+	} else {
+		var tmp = (*redisObject)(res.ptr)
+		var t = (*ChainList)(tmp.ptr)
+		ls,_:=t.listLRange(k,0,int(t.len))
+		return ls,nil
+	}
+}
 func (r *RedisDb)Lindex(k string,index int )  {
 
 }
