@@ -46,6 +46,7 @@ func (r *RedisDb) Get(key string) (s string, err error) {
 	}
 	return s, err
 }
+//将给定的字符串追加到现有的字符串的末尾
 func (r *RedisDb) Append(key, v string) (out int, err error) {
 	res, ok := r.dict[key]
 	if !ok {
@@ -69,6 +70,7 @@ func (r *RedisDb) Append(key, v string) (out int, err error) {
 	}
 	return out, nil
 }
+//对整数值进行加法计算
 func (r *RedisDb) Incrby(k string, v int64) (out string, err error) {
 	res, ok := r.dict[k]
 	if !ok {
@@ -87,6 +89,7 @@ func (r *RedisDb) Incrby(k string, v int64) (out string, err error) {
 	out = strconv.Itoa(int(i.buf))
 	return out, nil
 }
+//对整数数值进行减法计算
 func (r *RedisDb) Decrby(k string, v int64) (out string, err error) {
 	res, ok := r.dict[k]
 	if !ok {
@@ -104,6 +107,7 @@ func (r *RedisDb) Decrby(k string, v int64) (out string, err error) {
 	out = strconv.Itoa(int(i.buf))
 	return out, nil
 }
+//拷贝对象所保存的整数值，将整数值装换成字符串值，计算并返回这个字符串值的长度
 func (r *RedisDb) StrLen(k string) (l int, err error) {
 	res, ok := r.dict[k]
 	if !ok {
