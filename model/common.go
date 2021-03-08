@@ -7,10 +7,11 @@ import (
 )
 
 const (
-	sdsHdr = "sdsHdr"
-	sdsInt = "sdsInt"
+	sdsHdr     = "sdsHdr"
+	sdsInt     = "sdsInt"
+	zipList    = "ziplist"
+	linkedList = "linkedlist"
 )
-
 
 type redisObject struct {
 	Type      interface{}
@@ -33,19 +34,19 @@ type RedisDb struct {
 func RedisNew() RedisDb {
 	return RedisDb{dict: make(map[string]redisObject)}
 }
-func stringObjectNew(v string) (redisObject,error) {
+func stringObjectNew(v string) (redisObject, error) {
 	va, err := strconv.ParseFloat(v, 64)
-	if err !=nil{
-		return redisObject{Type: String{}, Enconding: sdsHdr, lru: time.Now().Unix(), Refound: 1, ptr: unsafe.Pointer(sdsHdrNew(v))},nil
+	if err != nil {
+		return redisObject{Type: String{}, Enconding: sdsHdr, lru: time.Now().Unix(), Refound: 1, ptr: unsafe.Pointer(sdsHdrNew(v))}, nil
 	}
-	return redisObject{Type: String{}, Enconding: sdsInt, lru: time.Now().Unix(), Refound: 1, ptr: unsafe.Pointer(SdsIntNew(va))},nil
+	return redisObject{Type: String{}, Enconding: sdsInt, lru: time.Now().Unix(), Refound: 1, ptr: unsafe.Pointer(SdsIntNew(va))}, nil
 
 }
 func hashObjectNew() redisObject {
 	return redisObject{Type: Hash{}, Enconding: dictht{}, lru: time.Now().Unix(), Refound: 0, ptr: unsafe.Pointer(new(dictht))}
 }
-func listObjectNew() (redisObject,error) {
-	return redisObject{Type: List{}, Enconding: ChainList{}, lru: time.Now().Unix(), Refound: 0, ptr: unsafe.Pointer(new(ChainList))},nil
+func listObjectNew() (redisObject, error) {
+	return redisObject{Type: List{}, Enconding: ChainList{}, lru: time.Now().Unix(), Refound: 0, ptr: unsafe.Pointer(ChainListCreate())}, nil
 }
 func zsetObjectNew() redisObject {
 	return redisObject{Type: Zset{}, Enconding: ZSkipList{}, lru: time.Now().Unix(), Refound: 0, ptr: unsafe.Pointer(new(ZSkipList))}

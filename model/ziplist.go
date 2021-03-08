@@ -30,4 +30,5 @@ func ZipListNew(v ...string) ZipList {
 		res.zllen += 1
 		res.zltail += unsafe.Offsetof(entry.content)
 	}
+	return res
 }
