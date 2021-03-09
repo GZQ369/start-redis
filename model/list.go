@@ -2,7 +2,6 @@ package model
 
 import (
 	"errors"
-	"fmt"
 	"time"
 	"unsafe"
 )
@@ -58,7 +57,8 @@ func (r *RedisDb) Rpush(k string, v ...string) (int64, error) {
 		r.dict[k] = redisObject{Type: List{}, Enconding: linkedList, lru: time.Now().Unix(), Refound: int(cl.GetSize()), ptr: unsafe.Pointer(&tmp)}
 		return cl.GetSize(), nil
 	} else {
-		var d *ChainList = (*ChainList)(res.ptr)
+		var sd  = (*redisObject)(res.ptr)
+		d := (*ChainList)(sd.ptr)
 		for _, va := range v {
 			d.listAddNodeTail(*sdsHdrNew(va))
 			d.len++
@@ -73,14 +73,12 @@ func (r *RedisDb) Lpop(k string) (resp string, err error) {
 	if !ok {
 		return "", errors.New("key nil")
 	} else {
-		var d  = *(*ChainList)(res.ptr)
-		n := d.listFirst()
-		//s := d.listDelNode(n)
-		fmt.Println(34535)
+		var d = (*redisObject)(res.ptr)
+		n := (*ChainList)(d.ptr)
+		s,err:= n.listDelNode(n.listFirst())
 
 		res.lru = time.Now().Unix()
-
-		return string(n.Value.Buf), nil
+		return string(s.Buf), err
 	}
 }
 
@@ -90,16 +88,67 @@ func (r *RedisDb) Rpop(k string) (resp string, err error) {
 		return "", errors.New("key nil")
 	} else {
 
-		n := (*redisObject)(res.ptr)
-		t:=*(*ChainList)(n.ptr)
-		s := t.listDelNode(*t.tail)
+		d := (*redisObject)(res.ptr)
+		n := (*ChainList)(d.ptr)
+		s,err:= n.listDelNode(n.listLast())
 
-		fmt.Println(string(t.head.Value.Buf))
 		res.lru = time.Now().Unix()
-		return string(s.Buf), nil
+		return string(s.Buf), err
 	}
 }
 
-func (r *RedisDb)Lindex(k string,index int )  {
+func (r *RedisDb) Lrange(k string) ([]string,error) {
+	res, ok := r.dict[k]
+	if !ok {
+		return []string{}, errors.New("key nil")
+	} else {
 
+		n := (*redisObject)(res.ptr)
+		t := (*ChainList)(n.ptr)
+		res,err:=t.listLRange(k)
+		return res,err
+	}
+}
+func (r *RedisDb) Lindex(k string, index int) (string,error) {
+	res, ok := r.dict[k]
+	if !ok {
+		return "", errors.New("key nil")
+	} else {
+
+		n := (*redisObject)(res.ptr)
+		t := (*ChainList)(n.ptr)
+		s,err := t.listIndex(index)
+		return string(s.Value.Buf),err
+	}
+}
+func (r *RedisDb) Linsert(k,v string, index int) ([]string,error) {
+	res, ok := r.dict[k]
+	if !ok {
+		return []string{}, errors.New("key nil")
+	}else {
+		n := (*redisObject)(res.ptr)
+		t := (*ChainList)(n.ptr)
+		newNode := new(ListNode)
+		newNode.Value = Sdshdr{
+			Buf: []byte(v),
+		}
+
+		t.listInsertNode(newNode,index)
+		s,err:= t.listLRange(k)
+		return s,err
+	}
+
+}
+
+func (r *RedisDb) LSet(k,v string, index int) (string,error) {
+	res, ok := r.dict[k]
+	if !ok {
+		return "", errors.New("key nil")
+	} else {
+
+		n := (*redisObject)(res.ptr)
+		t := (*ChainList)(n.ptr)
+		s,err := t.listLset(v,index)
+		return s,err
+	}
 }
