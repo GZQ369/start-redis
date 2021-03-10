@@ -2,8 +2,6 @@ package model
 
 import (
 	"errors"
-	"time"
-	"unsafe"
 )
 
 func (r *RedisDb) Hset(k string, v ...string) error {
@@ -14,7 +12,7 @@ func (r *RedisDb) Hset(k string, v ...string) error {
 	if !OK {
 		dc := dictHtNew()
 		err := dc.dictAdd(v)
-		res = redisObject{Type: Hash{}, Enconding: dictht{}, lru: time.Now().Unix(), Refound: 1, ptr: unsafe.Pointer(dc)}
+		res = dictObjectNew(dc)
 		r.dict[k] = res
 		return err
 	} else {
