@@ -1,6 +1,7 @@
 package model
 
 import (
+	"fmt"
 	"strconv"
 	"time"
 	"unsafe"
@@ -11,6 +12,8 @@ const (
 	sdsInt     = "sdsInt"
 	zipList    = "ziplist"
 	linkedList = "linkedlist"
+	intSet = "IntSet"
+	dictSet = "dictSet"
 )
 
 type redisObject struct {
@@ -51,10 +54,23 @@ func listObjectNew() (redisObject, error) {
 func zsetObjectNew() redisObject {
 	return redisObject{Type: Zset{}, Enconding: ZSkipList{}, lru: time.Now().Unix(), Refound: 0, ptr: unsafe.Pointer(new(ZSkipList))}
 }
-func setObjectNew() redisObject {
-	return redisObject{Type: Set{}, Enconding: dictht{}, lru: time.Now().Unix(), Refound: 0, ptr: unsafe.Pointer(new(dictht))}
-}
+func setObjectNew(v interface{}) redisObject {
 
+	var res unsafe.Pointer
+	var strTmp string
+	switch x := v.(type) {
+	case []string:
+		fmt.Printf("x is a string，value is %v\n", v)
+		res = unsafe.Pointer(IntSetNew(x))
+		strTmp = intSet
+	case *dictht:
+		fmt.Printf("x is a int is %v\n", v)
+		res = unsafe.Pointer(new(dictht))
+		strTmp = dictSet
+	}
+	return redisObject{Type: String{}, Enconding: strTmp, lru: time.Now().Unix(), Refound: 1, ptr: res}
+
+}
 //返回现在所有对象中，各个对象的数量
 func (r RedisDb) GetObjectNum() map[interface{}]int64 {
 	res := map[interface{}]int64{}
