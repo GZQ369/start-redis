@@ -1,4 +1,4 @@
-package redis
+package model
 
 import "bytes"
 
@@ -12,17 +12,16 @@ type Sdshdr struct {
 	Buf  []byte
 }
 
-func sdsNew(key string) Sdshdr {
-	return Sdshdr{
-		Len: len(key),
-		Buf: []byte(key),
-	}
+func sdsHdrNew(v string) *Sdshdr {
+	res:=[]byte(v)
+	return &Sdshdr{Len: len(res),Buf: res}
 }
 //返回一个空的SDS
 func SdsEmpty(key string) Sdshdr {
 	return Sdshdr{}
 }
 func (s *Sdshdr)SdsLen() int {
+	s.Len = len(s.Buf)
 	return s.Len
 }
 //创建一个给定SDS的副本
